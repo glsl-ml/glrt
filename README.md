@@ -26,52 +26,142 @@ cd mesa
 ```
 
 #### Configure
+
+##### To build `r600` driver:
 ```sh
-meson setup build/ \
+rm -rf build_r600/ install_r600/
+
+meson setup build_r600/ \
+  --prefix=$(pwd)/install_r600 \
   -Dgallium-drivers=r600 \
   -Dvulkan-drivers=[] \
   -Dplatforms=x11,wayland \
   -Dglx=dri \
-  -Dbuildtype=debugoptimized \
+  -Dbuildtype=release \
   -Dllvm=enabled
+
+ninja -C build_r600/ install_r600/
 ```
 
-#### Build
+##### To build `radeonsi` driver for OpenGL:
 ```sh
-ninja -C build/
+rm -rf build_si/ install_si/
+
+meson setup build_si/ \
+  --prefix=$(pwd)/install_si \
+  -Dgallium-drivers=radeonsi \
+  -Dvulkan-drivers=[] \
+  -Dplatforms=x11,wayland \
+  -Dglx=dri \
+  -Dbuildtype=release \
+  -Dllvm=enabled
+
+ninja -C build_si/ install_si/
 ```
+
+##### To build `radv` driver for Vulkan:
+```sh
+rm -rf build_radv/ install_radv/
+
+meson setup build_radv/ \
+  --prefix=$(pwd)/install_radv \
+  -Dgallium-drivers=[] \
+  -Dvulkan-drivers=amd \
+  -Dplatforms=x11,wayland \
+  -Dbuildtype=release \
+  -Dllvm=enabled
+
+ninja -C build_radv/ install_radv/
+```
+
 
 #### Test
 Create dev_shell.sh file
 
+##### For `r600`:
 ```sh
+cat << 'EOF' > dev_shell_r600.sh
 #!/bin/bash
+MESA_INSTALL="$(pwd)/install_r600"
 
-# Get the absolute path to the current directory
-MESA_ROOT=$(pwd)
+# 1. Point to the Installed Libraries (EGL, GL)
+export LD_LIBRARY_PATH="$MESA_INSTALL/lib64:$MESA_INSTALL/lib:$LD_LIBRARY_PATH"
 
-# Point to the local EGL / GL libraries
-export LD_LIBRARY_PATH="$MESA_ROOT/build/src/egl:$MESA_ROOT/build/src/glx:$MESA_ROOT/build/src/gbm:$LD_LIBRARY_PATH"
+# 2. Point to the Installed Drivers (DRI)
+export LIBGL_DRIVERS_PATH="$MESA_INSTALL/lib64/dri:$MESA_INSTALL/lib/dri"
+export EGL_DRIVERS_PATH="$LIBGL_DRIVERS_PATH"
 
-# Point to the local DRI drivers (where r600_dri.so lives)
-export LIBGL_DRIVERS_PATH="$MESA_ROOT/build/src/gallium/targets/dri"
-export EGL_DRIVERS_PATH="$MESA_ROOT/build/src/egl/drivers/dri2"
+# 3. Verify
+echo "--- Legacy AMD (r600) Dev Environment ---"
+echo "Drivers: $LIBGL_DRIVERS_PATH"
+echo "Running: $@"
+echo "-----------------------------------------"
 
-# Debugging flags (Optional, but helpful)
-# export EGL_LOG_LEVEL=debug
-# export LIBGL_DEBUG=verbose
-
-echo "--- Mesa Dev Environment Active ---"
-echo "Drivers Path: $LIBGL_DRIVERS_PATH"
 exec "$@"
+EOF
+chmod +x dev_shell_r600.sh
 ```
 
+##### For `radeonsi`:
 ```sh
-chmod +x dev_shell.sh
+cat << 'EOF' > dev_shell_si.sh
+#!/bin/bash
+MESA_INSTALL="$(pwd)/install_si"
+
+# 1. Point to the Installed Libraries (EGL, GL)
+export LD_LIBRARY_PATH="$MESA_INSTALL/lib64:$MESA_INSTALL/lib:$LD_LIBRARY_PATH"
+
+# 2. Point to the Installed Drivers (DRI)
+export LIBGL_DRIVERS_PATH="$MESA_INSTALL/lib64/dri:$MESA_INSTALL/lib/dri"
+export EGL_DRIVERS_PATH="$LIBGL_DRIVERS_PATH"
+
+# 3. Verify
+echo "--- Modern AMD (radeonsi) Dev Environment ---"
+echo "Drivers: $LIBGL_DRIVERS_PATH"
+echo "Running: $@"
+echo "---------------------------------------------"
+
+exec "$@"
+EOF
+chmod +x dev_shell_si.sh
 ```
 
-Run your test
+##### For `radv`:
 ```sh
-./dev_shell.sh ./app
+cat << 'EOF' > dev_shell_radv.sh
+#!/bin/bash
+MESA_INSTALL="$(pwd)/install_radv"
+
+# 1. Locate the JSON Manifest
+# Meson installs this into share/vulkan/icd.d/
+# The filename is usually radeon_icd.x86_64.json
+ICD_FILE="$MESA_INSTALL/share/vulkan/icd.d/radeon_icd.x86_64.json"
+
+# Safety Check
+if [ ! -f "$ICD_FILE" ]; then
+    echo "Error: Could not find Vulkan ICD manifest at:"
+    echo "$ICD_FILE"
+    exit 1
+fi
+
+# 2. Tell Vulkan Loader to use ONLY this driver
+# (Remove this export if you want to see both system and custom drivers)
+export VK_ICD_FILENAMES="$ICD_FILE"
+
+# 3. Verify
+echo "--- Vulkan (RADV) Dev Environment ---"
+echo "ICD Config: $VK_ICD_FILENAMES"
+echo "Running: $@"
+echo "-------------------------------------"
+
+exec "$@"
+EOF
+chmod +x dev_shell_radv.sh
 ```
 
+##### Run your test
+```sh
+./dev_shell_r600.sh eglxinfo
+./dev_shell_si.sh eglxinfo
+./dev_shell_radv.sh vulkaninfo
+```
