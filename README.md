@@ -7,9 +7,12 @@ Runtime around GL and VK
 # Install standard build tools
 sudo dnf install git gcc-c++ meson ninja-build bison flex
 
+# Install python mako
+sudo dnf install python3-mako
+
 # Install graphics dependencies
 sudo dnf install libdrm-devel libxshmfence-devel zlib-devel elfutils-libelf-devel \
-    expat-devel libX11-devel libXext-devel libXf86vm-devel libXfixes-devel \
+    expat-devel libX11-devel libXext-devel libXxf86vm-devel libXfixes-devel \
     libxcb-devel libXrandr-devel libXdamage-devel
 
 # Install LLVM (Required for r600 to compile shaders)
