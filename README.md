@@ -167,6 +167,8 @@ chmod +x dev_shell_radv.sh
 
 ##### Run your test
 ```sh
+sudo dnf install mesa-libEGL-devel mesa-libGLES-devel
+
 ./dev_shell_r600.sh eglxinfo
 ./dev_shell_si.sh eglxinfo
 ./dev_shell_radv.sh vulkaninfo
