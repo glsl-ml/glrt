@@ -130,7 +130,7 @@ void main() {
 }
 )";
 
-int main() {
+int main(int argc, const char *argv[]) {
     PFNEGLQUERYDEVICESEXTPROC eglQueryDevicesEXT = (PFNEGLQUERYDEVICESEXTPROC)eglGetProcAddress("eglQueryDevicesEXT");
     PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXT = (PFNEGLGETPLATFORMDISPLAYEXTPROC)eglGetProcAddress("eglGetPlatformDisplayEXT");
 
@@ -141,7 +141,15 @@ int main() {
     std::vector<EGLDeviceEXT> devices(num_devices);
     eglQueryDevicesEXT(num_devices, devices.data(), &num_devices);
 
-    EGLDisplay display = eglGetPlatformDisplayEXT(0x313F, devices[0], nullptr);
+    std::cout << "Found " << num_devices << " gpus on the machine\n";
+
+    int device = 0;
+    if(argc == 2) {
+        device = atoi(argv[1]);
+    }
+    assert(device < num_devices);
+    
+    EGLDisplay display = eglGetPlatformDisplayEXT(0x313F, devices[device], nullptr);
     eglInitialize(display, nullptr, nullptr);
     eglBindAPI(EGL_OPENGL_API);
 
