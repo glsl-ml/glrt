@@ -15,6 +15,9 @@ sudo dnf install libdrm-devel libxshmfence-devel zlib-devel elfutils-libelf-deve
     expat-devel libX11-devel libXext-devel libXxf86vm-devel libXfixes-devel \
     libxcb-devel libXrandr-devel libXdamage-devel
 
+# Install glslangValidator
+sudo dnf install glslang
+
 # Install LLVM (Required for r600 to compile shaders)
 sudo dnf install llvm-devel clang-devel
 
