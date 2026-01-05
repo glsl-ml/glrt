@@ -8,6 +8,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <cassert>
 
 // --- Configuration ---
 const int WIDTH = 1024;
