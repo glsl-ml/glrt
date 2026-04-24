@@ -1,11 +1,17 @@
 # glrt
 Runtime around GL and VK
 
+### Disable suspend
+
+```
+sudo systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
+```
+
 ## Install Mesa on Fedora
 ### Prereqs:
 ```sh
 # Install standard build tools
-sudo dnf install git gcc-c++ meson ninja-build bison flex
+sudo dnf install git gcc-c++ meson ninja-build bison flex cmake
 
 # Install python mako
 sudo dnf install python3-mako
