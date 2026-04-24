@@ -17,3 +17,6 @@ sudo dnf install llvm-devel clang-devel -y
 
 # Install Wayland/Protocols (Often required even for headless builds)
 sudo dnf install wayland-devel wayland-protocols-devel -y
+
+
+sudo dnf install glew-devel -y
